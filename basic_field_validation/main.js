@@ -5,7 +5,9 @@ const InputForm = {
 				<div class="mt-3 form-group">
 					<label>Item</label>
 					<input v-model="fields.newItem" type="text" placeholder="Add an item" class="form-control">
+					<span class="form-text text-info" style="float: right;">{{ fields.newItem.length }}/20</span>
 					<span class="form-text text-danger">{{ fieldErrors.newItem }}</span>
+					<span class="form-text text-danger" v-if="isNewItemInputLimitExceeded">Characters must not exceed 20</span>
 				</div>
 				<div class="mt-3 form-group">
 					<label>Email</label>
@@ -21,6 +23,7 @@ const InputForm = {
 						<option>Urgent</option>
 					</select>
 					<span class="form-text text-danger">{{ fieldErrors.urgency }}</span>
+					<span class="form-text text-danger" v-if="isNotUrgent">Must be moderate to urgent</span>
 				</div>
 				<div class="form-check">
 					<label class="form-check-label">
@@ -29,7 +32,7 @@ const InputForm = {
 					</label>
 					<span class="form-text text-danger">{{ fieldErrors.termsAndConditions }}</span>
 				</div>
-				<button type="submit" class="btn btn-success mt-2">Submit</button>
+				<button type="submit" class="btn btn-success mt-2" :disabled="isNewItemInputLimitExceeded || isNotUrgent">Submit</button>
 			</form>
 
 			<div class="items mt-3">
@@ -58,6 +61,14 @@ const InputForm = {
 			},
 			items: [],
 		}
+	},
+	computed: {
+		isNewItemInputLimitExceeded() {
+			return this.fields.newItem.length > 20;
+		},
+		isNotUrgent() {
+			return this.fields.urgency === "Nonessential";
+		},
 	},
 	methods: {
 		submitForm(event) {
