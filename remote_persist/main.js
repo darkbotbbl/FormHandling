@@ -1,3 +1,31 @@
+let apiClient = {
+	loadItems: function() {
+		return {
+			then: function(cb) {
+				setTimeout(() => {
+					cb(JSON.parse(localStorage.items || '[]'));
+				}, 1000);
+			}
+		}
+	},
+
+	saveItems: function(items) {
+		const success = !!(this.count++ % 2);
+
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				if (!success) return reject({success});
+
+				localStorage.items = JSON.stringify(items);
+				return resolve({success});
+			}, 1000)
+		});
+	},
+
+	count: 1,
+}
+
+
 const InputForm = {
 	template: `
 		<div>
@@ -72,6 +100,11 @@ const InputForm = {
 			return this.fields.urgency === "Nonessential";
 		},
 	},
+	created() {
+		this.loading = true;
+		this.loadItems();
+		this.loading = false;
+	},
 	methods: {
 		submitForm(event) {
 			event.preventDefault();
@@ -79,11 +112,10 @@ const InputForm = {
 			this.fieldErrors = this.validateForm(this.fields);
 			if (Object.keys(this.fieldErrors).length) return;
 
-			this.items.push(this.fields.newItem);
-			this.fields.newItem = '';
-			this.fields.email = '';
-			this.fields.urgency = '';
-			this.fields.termsAndConditions = false;
+			const items = [...this.items, this.fields.newItem];
+
+			this.saveStatus = "SAVING";
+			this.saveItems(items)
 
 		},
 		validateForm(fields) {
@@ -102,6 +134,23 @@ const InputForm = {
 		isEmail(email) {
 			const re = /\S+@\S+.\S+/;
 			return re.test(email);
+		},
+		async loadItems() {
+			const items = await apiClient.loadItems();
+			this.items = items
+		},
+		async saveItems(items) {
+			try {
+				await apiClient.saveItems(items);
+				this.fields.newItem = '';
+				this.fields.email = '';
+				this.fields.urgency = '';
+				this.fields.termsAndConditions = false;
+				this.saveStatus = 'SUCCESS';
+			} catch(error) {
+				console.log("An error occured", error);
+				this.saveStatus = 'ERROR'
+			}
 		}
 	}
 }
@@ -113,31 +162,3 @@ const vm = new Vue({
 		InputForm
 	}
 })
-
-
-let apiClient = {
-	loadItems: function() {
-		return {
-			then: function(cb) {
-				setTimeout(() => {
-					cb(JSON.parse(localStorage.items || '[]'));
-				}, 1000);
-			}
-		}
-	},
-
-	saveItems: function(items) {
-		const success = !!(this.count++ % 2);
-
-		return new Promise((resolve, reject) => {
-			setTimeout(() => {
-				if (!success) return reject({success});
-
-				localStorage.items = JSON.stringify(items);
-				return resolve({success});
-			}, 1000)
-		});
-	},
-
-	count: 1,
-}
