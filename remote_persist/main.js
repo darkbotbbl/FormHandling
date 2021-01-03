@@ -60,12 +60,43 @@ const InputForm = {
 					</label>
 					<span class="form-text text-danger">{{ fieldErrors.termsAndConditions }}</span>
 				</div>
-				<button type="submit" class="btn btn-success mt-2" :disabled="isNewItemInputLimitExceeded || isNotUrgent">Submit</button>
+				<button type="submit" 
+					class="btn btn-info btn-block mt-2" 
+					disabled 
+					v-if="saveStatus === 'SAVING'"
+				>Saving ...</button>
+
+				<button type="submit" 
+					class="btn btn-success btn-block mt-2" 
+					:disabled="isNewItemInputLimitExceeded || isNotUrgent"
+					v-if="saveStatus === 'SUCCESS'"
+				>Saved, Submit Another</button>
+
+				<button type="submit" 
+					class="btn btn-warning btn-block mt-2" 
+					:disabled="isNewItemInputLimitExceeded || isNotUrgent"
+					v-if="saveStatus === 'ERROR'"
+				>Saved Failed. Retry?</button>
+
+				<button type="submit"
+					class="btn btn-primary btn-block mt-2" 
+					:disabled="isNewItemInputLimitExceeded || isNotUrgent"
+					v-if="saveStatus === 'READY'"
+				>Submit</button>
 			</form>
 
 			<div class="items mt-3">
 				<h4 class="text-center">Items</h4>
 				<hr />
+
+				<!-- 
+				<div class="d-flex justify-content-center" >
+					<div class="spinner-border text-success text-center" role="status">
+						<span class="sr-only">Loading...</span>
+						{{ loading }}
+					</div>
+				</div>
+				-->
 
 				<ol>
 					<li v-for="item in items" :key="item">{{ item }}</li>
@@ -113,6 +144,8 @@ const InputForm = {
 			if (Object.keys(this.fieldErrors).length) return;
 
 			const items = [...this.items, this.fields.newItem];
+
+			this.items = items;
 
 			this.saveStatus = "SAVING";
 			this.saveItems(items)
